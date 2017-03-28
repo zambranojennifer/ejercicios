@@ -1,120 +1,250 @@
 <?php
-include 'config.php';
-include 'funciones.php';
+
+$conn = new mysqli("localhost", "root", "root", "pruebas");
+
+/* verificar la conexión */
+if ($conn->connect_errno) {
+    printf("Conexión fallida: %s\n", $conn->connect_error);
+    exit();
+}
+
+
+$xml=simplexml_load_file("Gate-In-Export-Full_I.XML");
+
+//print_r($xml);
+
+echo "<table>";
+
+foreach ($xml as $datos) {
+
+	/**** Bloque del Header ****/
+
+	    $MessageType = $datos[0]->MessageType;
+	    $DocumentIdentifier = $datos[0]->DocumentIdentifier;
+    	$DateTime = $datos[0]->DateTime;
+    	$PartnerIdentifier1 = $datos[0]->Parties->PartnerInformation[0]->PartnerIdentifier;
+		$PartnerIdentifier2 = $datos[0]->Parties->PartnerInformation[1]->PartnerIdentifier;
+	/**** Fin del Header ****/
+
+	foreach ($xml as $datos) {
+
+
+
+    /**** Bloque de MessageBody ****/
+    	$EventCode = $datos[1]->MessageProperties->EventCode;
+	    $LocationCode = $datos[1]->MessageProperties->EventLocation->Location->LocationCode;
+	    $LocationCountry = $datos[1]->MessageProperties->EventLocation->Location->LocationCountry;
+
+	    $DateTime = $datos[1]->MessageProperties->EventLocation->Location->DateTime;
+	    $ReferenceInformation1 = $datos[1]->MessageProperties->ReferenceInformation[0];
+	    $ReferenceInformation2 = $datos[1]->MessageProperties->ReferenceInformation[0];
+	    $ShipmentComments = $datos[1]->MessageProperties->Instructions->ShipmentComments;
+
+
+	    $ConveyanceName = $datos[1]->MessageProperties->TransportationDetails->ConveyanceInformation->ConveyanceName;
+	    $VoyageTripNumber = $datos[1]->MessageProperties->TransportationDetails->ConveyanceInformation->VoyageTripNumber;
+	    $CarrierSCAC = $datos[1]->MessageProperties->TransportationDetails->ConveyanceInformation->CarrierSCAC;
+	    $TransportIdentification = $datos[1]->MessageProperties->TransportationDetails->ConveyanceInformation->TransportIdentification;
+    
+
+	    /***** Bloque de TransportationDetails->Location  ****/
+		    $LocationCode = $datos[1]->MessageProperties->TransportationDetails->Location->LocationCode;
+			$LocationName = $datos[1]->MessageProperties->TransportationDetails->Location->LocationName;
+			$LocationCountry = $datos[1]->MessageProperties->TransportationDetails->Location->LocationCountry;
+			$DateTime = $datos[1]->MessageProperties->TransportationDetails->Location->DateTime;
+
+			$LocationCode1 = $datos[1]->MessageProperties->TransportationDetails->Location[1]->LocationCode;
+			$LocationName1 = $datos[1]->MessageProperties->TransportationDetails->Location[1]->LocationName;
+			$LocationCountry1 = $datos[1]->MessageProperties->TransportationDetails->Location[1]->LocationCountry;
+			$DateTime1 = $datos[1]->MessageProperties->TransportationDetails->Location[1]->DateTime;
+
+			$LocationCode2 = $datos[1]->MessageProperties->TransportationDetails->Location[2]->LocationCode;
+			$LocationName2 = $datos[1]->MessageProperties->TransportationDetails->Location[2]->LocationName;
+			$LocationCountry2 = $datos[1]->MessageProperties->TransportationDetails->Location[2]->LocationCountry;
+			$DateTime2 = $datos[1]->MessageProperties->TransportationDetails->Location[2]->DateTime;
+
+			$LocationCode3 = $datos[1]->MessageProperties->TransportationDetails->Location[3]->LocationCode;
+			$LocationName3 = $datos[1]->MessageProperties->TransportationDetails->Location[3]->LocationName;
+			$LocationCountry3 = $datos[1]->MessageProperties->TransportationDetails->Location[3]->LocationCountry;
+			$DateTime3 = $datos[1]->MessageProperties->TransportationDetails->Location[3]->DateTime;
+
+			$LocationCode4 = $datos[1]->MessageProperties->TransportationDetails->Location[4]->LocationCode;
+			$LocationName4 = $datos[1]->MessageProperties->TransportationDetails->Location[4]->LocationName;
+			$LocationCountry4 = $datos[1]->MessageProperties->TransportationDetails->Location[4]->LocationCountry;
+			$DateTime4 = $datos[1]->MessageProperties->TransportationDetails->Location[4]->DateTime;
+
+		/**** Fin del Bloque TransportationDetails->Location ****/
+
+		$PartnerIdentifier = $datos[1]->MessageProperties->Parties->PartnerInformation->PartnerIdentifier;
+		$LineNumber = $datos[1]->MessageDetails->EquipmentDetails->LineNumber;
+		$EquipmentIdentifier = $datos[1]->MessageDetails->EquipmentDetails->EquipmentIdentifier;
+		$EquipmentTypeCode = $datos[1]->MessageDetails->EquipmentDetails->EquipmentType->EquipmentTypeCode;
+	/**** fin del MessageBody ****/
+	     
+
+	}
+   
+   /**** Consulto para ver si ya el container fue guardado antes de repetirlo ****/
+$consult = "SELECT e.DocumentIdentifier,c.Identifier FROM evento as e , container as c where e.DocumentIdentifier = '$DocumentIdentifier'";
+$consulta = $conn->query($consult);
+
+
+	if ($consulta->num_rows == 0) {
+
+		/**** Datos a insertar en la tabla event ****/
+		$insertEvent = "INSERT INTO `evento`(`EventCode`, `locationCode`, `locationName`, `locationCounty`, `dateTime`, `booking`, `idBL`, `instructions`,`DocumentIdentifier`) VALUES('$EventCode','$LocationCode','$LocationName','$LocationCountry','$DateTime', '$ReferenceInformation1','$ReferenceInformation2','$ShipmentComments','$DocumentIdentifier')";
+		$result = $conn->query($insertEvent);
+
+
+		/**** datos a insertar en la tabla container ****/
+		$insertContainer = "INSERT INTO `container`(`idBL`, `typeMessage`, `Identifier`, `datetime`, `entidadEmisora`, `entidadReceptora`, `contactName`, `telephone`, `ConveyanceName`, `VoyageTripNumber`, `CarrierSCAC`, `TransportIdentification`, `CodeCityPort`, `nameCityPort`, `codeCountryPort`, `salidaEfectivaPort`, `codeCityReceipt`, `nameCityReceipt`, `codeCountyReceipt`, `salidaEstimadaReceipt`, `codeCityLoading`, `nameCityLoading`, `codeCountryLoading`, `salidaEfectivaLoading`, `codeCityDischarge`, `nameCityDischarge`, `codeCountyDischarge`, `llegadaEfectivaDischarge`, `codeCityDelivery`, `nameCityDelivery`, `codeCountyDelivery`, `llegadaEstimadaDelivery`, `partnerIdentifier`, `partnerName`, `equipmentIdentifier`, `equipmentTypeCode`) VALUES ('$ReferenceInformation2','$MessageType','$DocumentIdentifier','$DateTime','$PartnerIdentifier1','$PartnerIdentifier2','value-8','value-9','$ConveyanceName','$VoyageTripNumber','$CarrierSCAC','$TransportIdentification','$LocationCode','$LocationName','$LocationCountry','$DateTime','$LocationCode1','$LocationName1','$LocationCountry1','$DateTime1','$LocationCode2','$LocationName2','$LocationCountry2','$DateTime2','$LocationCode3','$LocationName3','$LocationCountry3','$DateTime3','$LocationCode4','$LocationName4','$LocationCountry4','$DateTime4','$PartnerIdentifier','$LineNumber','$EquipmentIdentifier','$EquipmentTypeCode')";
+		$result = $conn->query($insertContainer);
+
+
+		$resultado = "Se agrego este Xml en la base de dato";
+
+	}else{
+
+		$resultado = "Ya este Xml Fue insertado en la Base de dato";
+	}
+
+
+
+	echo "<!DOCTYPE html>
+				<html>
+				<head>
+				<title>INFORMACION XML</title>
+				</head>
+					<body>
+						<table border='1'>
+						    <th colspan= 4>Event Number Identifier: ".$DocumentIdentifier."</th>
+						    <tr>
+							<th>EventCode</th>
+					    	<th>LocationCode</th> 
+					    	<th>LocationName</th>
+					    	<th>LocationCountry</th>
+					    	</tr>
+					    	<tr>
+					    		<td>".$EventCode."</td>
+					    		<td>".$LocationCode."</td> 
+					    		<td>".$LocationName."</td> 
+					    		<td>".$LocationCountry."</td>
+					    	</tr>
+					    	<th>DateTime</th>
+					    	<th>booking</th>
+					    	<th>IdBl</th>
+					    	<th>Instructions</th>
+					    	<tr>
+					    		<td>".$DateTime."</td>
+					    		<td>".$ReferenceInformation1."</td>
+					    		<td>" .$ReferenceInformation2."</td>
+					    		<td>".$ShipmentComments."</td>
+					    	</tr>
+						</table>
+						</br>
+						<table border='1'>
+							<tr><th colspan=4>Table Container</th></tr>
+							<th>IdBl</th>
+							<th>MessageType</th>
+					    	<th>DocumentIdentifier</th> 
+					    	<th>DateTime</th>
+							<tr>
+								<td>".$EventCode."</td>
+								<td>".$MessageType."</td>
+					    		<td>".$DocumentIdentifier."</td> 
+					    		<td>".$DateTime."</td>
+					    	</tr>
+					    	<th>Entidadd Emisora</th>
+					    	<th>Entidad Receptora</th>
+					    	<th>ContactName</th>
+					    	<th>telephone</th>
+					    	<tr>
+					    		<td>".$PartnerIdentifier1."</td>
+					    		<td>".$PartnerIdentifier2."</td>
+					    		<td>no tengo nombre de contacto</td>
+					    		<td>No tengo en telephone</td>
+					    	</tr>
+					    	<th>ConveyanceName</th>
+					    	<th>VoyageTripNumber</th>
+					    	<th>CarrierSCAC</th>
+					    	<th>TransportIdentification</th>
+					    	<tr>
+					    		<td>".$ConveyanceName."</td>
+					    		<td>".$VoyageTripNumber."</td>
+					    		<td>".$CarrierSCAC."</td>
+					    		<td>".$TransportIdentification."</td>
+					    	</tr>
+					    	<th>CodePort</th>
+					    	<th>NamePort</th>
+					    	<th>CountryPort</th>
+					    	<th>DateTimePort</th>
+					    	<tr>
+					    		<td>".$LocationCode."</td>
+					    		<td>".$LocationName."</td>
+					    		<td>".$LocationCountry."</td>
+					    		<td>".$DateTime."</td>
+					    	</tr>
+					    	<th>CodeReceipt</th>
+					    	<th>NameReceipt</th>
+					    	<th>CountryReceipt</th>
+					    	<th>DateTimeReceipt</th>
+					    	<tr>
+					    		<td>".$LocationCode1."</td>
+					    		<td>".$LocationName1."</td>
+					    		<td>".$LocationCountry1."</td>
+					    		<td>".$DateTime1."</td>
+					    	</tr>
+					    	<th>CodeLoading</th>
+					    	<th>NameLoading</th>
+					    	<th>CountryLoading</th>
+					    	<th>DateTimeLoading</th>
+					    	<tr>
+					    		<td>".$LocationCode2."</td>
+					    		<td>".$LocationName2."</td>
+					    		<td>".$LocationCountry2."</td>
+					    		<td>".$DateTime2."</td>
+					    	</tr>
+					    	<th>CodeDischarge</th>
+					    	<th>NameDischarge</th>
+					    	<th>CountryDischarge</th>
+					    	<th>DateTimeDischarge</th>
+					    	<tr>
+					    		<td>".$LocationCode3."</td>
+					    		<td>".$LocationName3."</td>
+					    		<td>".$LocationCountry3."</td>
+					    		<td>".$DateTime3."</td>
+					    	</tr>
+					    	<th>CodeDelivery</th>
+					    	<th>NameDelivery</th>
+					    	<th>CountryDelivery</th>
+					    	<th>DateTimeDelivery</th>
+					    	<tr>
+					    		<td>".$LocationCode4."</td>
+					    		<td>".$LocationName4."</td>
+					    		<td>".$LocationCountry4."</td>
+					    		<td>".$DateTime4."</td>
+					    	</tr>
+					    	<th>Codigo Armador</th>
+					    	<th>Nombre Armador</th>
+					    	<th>Estado del Contenedor y la Serie</th>
+					    	<th>Tipo de Contenedor </th>
+					    	<tr>
+					    		<td>".$PartnerIdentifier."</td>
+					    		<td>".$LineNumber."</td>
+					    		<td>".$EquipmentIdentifier."</td>
+					    		<td>".$EquipmentTypeCode."</td>
+					    	</tr>
+						</table>
+						</br>
+						<h4>".$resultado."</h4>
+					</body>
+				</html>";
+	
+}
+
+echo "</table>";
+
+/* cerrar la conexión */
+$conn->close();
+
 ?>
-<!DOCTYPE html>
-<head>
-	<title>Empleados</title>
-	<!-- Meta -->
-	<meta charset="utf-8">
-	<!-- Global CSS -->
-	<link rel="stylesheet" href="assets/css/bootstrap.min.css">   
-</head> 
-<body>
-	<h1 align="center">Test de Programaci&oacute;n</h1>
-	<center><span><span>GlobalConexus - Enero 2017</span></span></center>
-	<hr size="2px" color="black" />
-	<div class="tab-content">            
-		<div class="row">
-			<div class="col-md-3 col-sm-3 col-xs-10 col-xs-offset-1">
-				<table class="table"> 
-					<thead> 
-						<tr>
-							<td colspan="4">
-								Informaci&oacute;n del ejercicio n&uacute;mero 6
-							</td>
-						</tr>
-						<tr> 
-							<th>#</th>
-							<th>Nombre</th> 
-							<th>Apellido</th> 
-							<th>Correo</th> 
-						</tr>
-					</thead>
-					<tbody> 
-						<?php
-						if ($result1->num_rows > 0) {
-							while($row = $result1->fetch_assoc()) {
-								echo "<tr><td>".$row["id"]."</td>";
-								echo "<td>".$row["nombre"]."</td>";
-								echo "<td>".$row["apellido"]."</td>";
-								echo "<td>".$row["correo"]."</td></tr>";
-							}
-						}
-						?>
-					</tbody> 
-				</table>
-			</div>
-			<div class="col-md-3 col-sm-3 col-xs-10 col-xs-offset-1">
-				<table class="table"> 
-					<thead> 
-						<tr>
-							<td colspan="4">
-								Informaci&oacute;n del ejercicio n&uacute;mero 5 pagos realizados el a&ntilde;o 2017
-							</td>
-						</tr>
-						<tr> 
-							<th>#</th>
-							<th>Name</th> 
-							<th>Monto</th> 
-						</tr>
-					</thead>
-					<tbody> 
-						<?php
-						if ($result2->num_rows > 0) {
-							while($row = $result2->fetch_assoc()) {
-								echo "<tr><td>".$row["id"]."</td>";
-								echo "<td>".$row["name"]."</td>";
-								echo "<td>".$row["total"]."</td>";
-							}
-						}
-						?>
-					</tbody> 
-				</table>
-			</div>
-			<div class="tab-content">            
-				<div class="row">
-					<div class="col-md-2 col-sm-2 col-xs-10 col-xs-offset-1">
-						<span>¿Qué comprobaci&oacute;n realiza el operador === ?: Dependiendo el lenguaje tiene un significado diferente por ejemplo: en PHP y Javascript el significado de este operador es Id&eacute;ntico o estrictamente igual </span>
-					</div>
-				</div>
-				<hr size="2px" color="black" />
-				<div class="tab-content">            
-					<div class="row">
-						<div class="col-md-2 col-sm-2 col-xs-10 col-xs-offset-1">
-							<span>Cantidad de estudiantes que tienen el nombre Juan: </span>
-							<?php
-							if ($result3->num_rows > 0) {
-								while($row = $result3->fetch_assoc()) {
-									echo "<tr><td>".$row["total"]."</td>";
-								}
-							}
-							?>
-
-						</div>
-						<div class="col-md-3 col-sm-3 col-xs-10 col-xs-offset-1">
-							<form mane"formulario" method="post" action="transformacion.php">
-								<div class="form-group">
-									<label for="personas">N&uacute;meros para convertir en letra</label>
-									<span>Se estableci&oacute; como limite de conversion hasta el numero 999</span>
-									<input type="number" class="form-control" id="num" name ="num" placeholder="N&uacute;meros de personas">
-								</div>
-								<button type="submit" class="btn btn-primary">Convertir</button>
-							</form>
-						</div>
-						<div class="col-md-3 col-sm-3 col-xs-10 col-xs-offset-1">
-							<form mane"formulario" method="post" action="palindromo.php">
-								<div class="form-group">
-									<label for="palabra">Verifica si una palabra dada es un pal&iacute;ndromo</label>
-									<input type="text" class="form-control" id="palabra" name ="palabra" placeholder="N&uacute;meros de personas">
-								</div>
-								<button type="submit" class="btn btn-primary">Verificar</button>
-							</form>
-						</div>
-					</div>
-				</div>
-
-				<!-- Javascript --> 
-				<script src="assets/js/jquery.min.js"></script>   
-			</body>
-			</html>

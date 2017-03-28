@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<Message>
+  <Header>
+    <MessageType MessageVersion="1.0" >Status</MessageType>
+    <DocumentIdentifier>804006970</DocumentIdentifier>
+    <DateTime DateType="Document" >0609142200</DateTime>
+    <Parties>
+      <PartnerInformation PartnerRole="Sender" >
+        <PartnerIdentifier Agency="AssignedBySender" >INTTRA</PartnerIdentifier>
+      </PartnerInformation>
+      <PartnerInformation PartnerRole="Recipient" >
+        <PartnerIdentifier Agency="AssignedByRecipient" >RECEIVER_ID</PartnerIdentifier>
+      </PartnerInformation>
+    </Parties>
+  </Header>
+  <MessageBody>
+    <MessageProperties>
+      <EventCode>AE</EventCode>
+      <EventLocation>
+        <Location LocationType="ActivityLocation" >
+          <LocationCode Agency="UN" >BRRIG</LocationCode>
+          <LocationCountry>BR</LocationCountry>
+          <DateTime DateType="StatusChange" >200609142200</DateTime>
+        </Location>
+      </EventLocation>
+      <ReferenceInformation ReferenceType="BookingNumber" >800096298</ReferenceInformation>
+      <ReferenceInformation ReferenceType="BillOfLadingNumber" >800096298</ReferenceInformation>
+      <Instructions>
+        <ShipmentComments CommentType="General" >MAERSK BOOK NO. MSG=EVENT GENERATED</ShipmentComments>
+      </Instructions>
+      <TransportationDetails TransportStage="Main" TransportMode="Maritime" >
+        <ConveyanceInformation>
+          <ConveyanceName>NEDLLOYD ADRIANA</ConveyanceName>
+          <VoyageTripNumber>0613</VoyageTripNumber>
+          <CarrierSCAC>MAEU</CarrierSCAC>
+          <TransportIdentification TransportIdentificationType="LloydsCode" >9275024</TransportIdentification>
+        </ConveyanceInformation>
+        <Location LocationType="IntermediatePort" >
+          <LocationCode Agency="UN" >BRRIG</LocationCode>
+          <LocationName>RIO GRANDE</LocationName>
+          <LocationCountry>BR</LocationCountry>
+          <DateTime DateType="DepartureActual" >200609142200</DateTime>
+        </Location>
+        <Location LocationType="PlaceOfReceipt" >
+          <LocationCode Agency="UN" >BRRIG</LocationCode>
+          <LocationName>RIO GRANDE</LocationName>
+          <LocationCountry>BR</LocationCountry>
+          <DateTime DateType="DepartureActual" >200609080953</DateTime>
+        </Location>
+        <Location LocationType="PortOfLoading" >
+          <LocationCode Agency="UN" >BRRIG</LocationCode>
+          <LocationName>RIO GRANDE</LocationName>
+          <LocationCountry>BR</LocationCountry>
+          <DateTime DateType="DepartureActual" >200609142200</DateTime>
+        </Location>
+        <Location LocationType="PortOfDischarge" >
+          <LocationCode Agency="UN" >RUARM</LocationCode>
+          <LocationName>MAGADAN</LocationName>
+          <LocationCountry>RU</LocationCountry>
+        </Location>
+        <Location LocationType="PlaceOfDelivery" >
+          <LocationCode Agency="UN" >RUARM</LocationCode>
+          <LocationName>MAGADAN</LocationName>
+          <LocationCountry>RU</LocationCountry>
+        </Location>
+      </TransportationDetails>
+      <Parties>
+        <PartnerInformation PartnerRole="Carrier" >
+          <PartnerIdentifier Agency="AssignedByCarrier" >MAEU</PartnerIdentifier>
+        </PartnerInformation>
+      </Parties>
+    </MessageProperties>
+    <MessageDetails>
+      <EquipmentDetails>
+        <LineNumber>1</LineNumber>
+        <EquipmentIdentifier LoadType="Full" >POCU4712258</EquipmentIdentifier>
+        <EquipmentType>
+          <EquipmentTypeCode>4332</EquipmentTypeCode>
+        </EquipmentType>
+      </EquipmentDetails>
+    </MessageDetails>
+  </MessageBody>
+</Message>
