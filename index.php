@@ -1,263 +1,153 @@
 <?php
 
+// ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
+
 include('Net/SFTP.php');
 
-$sftp = new Net_SFTP('server');
+$sftp = new Net_SFTP('nombre del servidor');
 
-if (!$sftp->login('userServer', 'passwordServer')) {
-    exit('Login Failed');
+$sftp_url = "ruta del servidor";
+
+$url_local = "ruta del local donde se guardara";
+ listar_archivo_local($url_local);
+if (!$sftp->login('usuario del servidor', 'password del servidor')) {
+	exit('Login Failed');
 }
 
-$conn = new mysqli("server", "userServer", "passwordServer", "BD");
+//listo todo los archivos que esta en la carpeta xml en el servidor 
+$archivoXml =$sftp->nlist($sftp_url);
 
-/* verificar la conexión */
-if ($conn->connect_errno) {
-    printf("Conexión fallida: %s\n", $conn->connect_error);
-    exit();
+foreach ($archivoXml as $xml) {
+
+	/*Me descargo el archivo del servidor y lo guardo en una carpeta en el servidor local*/
+	$sftp->get($sftp_url."/".$xml, $url_local."/".$xml);
 }
 
+function listar_archivo_local($carpeta){
+    if(is_dir($carpeta)){
+        if($dir = opendir($carpeta)){
+            while(($archivo = readdir($dir)) !== false){
+                if($archivo != '.DS_Store' && $archivo != 'vgm' && $archivo != '.' && $archivo != '..' && $archivo != '.htaccess'){
 
-	//listo todo los archivos que esta en la carpeta xml en el servidor 
-	$archivoXml =$sftp->nlist('/srv/users/modaltrade/apps/modaltrade/public/xml');
+                	$conn = new mysqli("servidor local", "usuario", "password", "bd");
 
-	foreach ($archivoXml as $xml) {
+					/* verificar la conexión */
+					if ($conn->connect_errno) {
+						printf("Conexión fallida: %s\n", $conn->connect_error);
+						exit();
+					}
 
-		//Me descargo el archivo del servidor y lo guardo en una carpeta en el servidor local 
-		$sftp->get('/srv/users/modaltrade/apps/modaltrade/public/xml/'.$xml, '/Applications/MAMP/htdocs/modaltrade/xml/'.$xml);
+					$readXml=simplexml_load_file('xml/'.$archivo);
 
-		$readXml=simplexml_load_file('xml/'.$xml);
+					foreach ($readXml as $datos) {
+					    echo "MessageType => ".$MessageType = $datos->MessageType;
+						echo "DocumentIdentifier => ".$DocumentIdentifier = $datos->DocumentIdentifier;
+						echo "DateTime => ".$DateTime = $datos->DateTime;
+						echo "EventCode => ".$EventCode = $datos->MessageProperties->EventCode;
+						
+						echo "ReferenceInformation1 => ".$ReferenceInformation1 = $datos->MessageProperties->ReferenceInformation[0];
+						echo "ReferenceInformation2 => ".$ReferenceInformation2 = $datos->MessageProperties->ReferenceInformation[0];		
 
-	echo "<table>";
+						if ($datos->MessageProperties->Instructions) {
 
-		foreach ($readXml as $datos) {
+						 	echo "ShipmentComments => ".$ShipmentComments = $datos->MessageProperties->Instructions->ShipmentComments;
+						 }else{
+						 	echo "ShipmentComments => ".$ShipmentComments = "";
+						 }
 
-			/**** Bloque del Header ****/
+						 foreach ($readXml->MessageBody->MessageProperties->TransportationDetails->Location as $datosTransportation) {
 
-			    $MessageType = $datos[0]->MessageType;
-			    $DocumentIdentifier = $datos[0]->DocumentIdentifier;
-		    	$DateTime = $datos[0]->DateTime;
-		    	$PartnerIdentifier1 = $datos[0]->Parties->PartnerInformation[0]->PartnerIdentifier;
-				$PartnerIdentifier2 = $datos[0]->Parties->PartnerInformation[1]->PartnerIdentifier;
-			/**** Fin del Header ****/
+							    switch((string) $datosTransportation['LocationType']) { // Obtener los atributos como índices del elemento
+							    
+								    case 'IntermediatePort':
+								        echo "LocationCode => ".$LocationCode = $datosTransportation->LocationCode;
+								        echo "LocationName => ".$LocationName = $datosTransportation->LocationName;
+								        echo "LocationCountry => ".$LocationCountry = $datosTransportation->LocationCountry;
+								        echo "DateTime => ".$DateTime = $datosTransportation->DateTime;
+								        break;
 
-			foreach ($readXml as $datos) {
+								    case 'PlaceOfReceipt':
+								        echo "LocationCode1 => ".$LocationCode1 = $datosTransportation->LocationCode;
+								        echo "LocationName1 => ".$LocationName1 = $datosTransportation->LocationName;
+								        echo "LocationCountry1 => ".$LocationCountry1 = $datosTransportation->LocationCountry;
+								        echo "DateTime1 => ".$DateTime1 = $datosTransportation->DateTime;
+								        break;
+								    case 'PortOfLoading':
+								        echo "LocationCode2 => ".$LocationCode2 = $datosTransportation->LocationCode;
+								        echo "LocationName2 => ".$LocationName2 = $datosTransportation->LocationName;
+								        echo "LocationCountry2 => ".$LocationCountry2 = $datosTransportation->LocationCountry;
+								        echo "DateTime2 => ".$DateTime2 = $datosTransportation->DateTime;
+								        break;
+								    case 'PortOfDischarge':
+							        echo "LocationCode3 => ".$LocationCode3 = $datosTransportation->LocationCode;
+							        echo "LocationName3 => ".$LocationName3 = $datosTransportation->LocationName;
+							        echo "LocationCountry3 => ".$LocationCountry3 = $datosTransportation->LocationCountry;
+							        echo "DateTime3 => ".$DateTime3 = $datosTransportation->DateTime;
+							        break;
 
+							     case 'PlaceOfDelivery':
+							        echo "LocationCode4 => ".$LocationCode4 = $datosTransportation->LocationCode;
+							        echo "LocationName4 => ".$LocationName4 = $datosTransportation->LocationName;
+							        echo "LocationCountry4 => ".$LocationCountry4 = $datosTransportation->LocationCountry;
+							        echo "DateTime4 => ".$DateTime4 = $datosTransportation->DateTime;
+							        break;
 
-
-		    /**** Bloque de MessageBody ****/
-		    	$EventCode = $datos[1]->MessageProperties->EventCode;
-			    $LocationCode = $datos[1]->MessageProperties->EventLocation->Location->LocationCode;
-			    $LocationCountry = $datos[1]->MessageProperties->EventLocation->Location->LocationCountry;
-
-			    $DateTime = $datos[1]->MessageProperties->EventLocation->Location->DateTime;
-			    $ReferenceInformation1 = $datos[1]->MessageProperties->ReferenceInformation[0];
-			    $ReferenceInformation2 = $datos[1]->MessageProperties->ReferenceInformation[0];
-			    $ShipmentComments = $datos[1]->MessageProperties->Instructions->ShipmentComments;
-
-
-			    $ConveyanceName = $datos[1]->MessageProperties->TransportationDetails->ConveyanceInformation->ConveyanceName;
-			    $VoyageTripNumber = $datos[1]->MessageProperties->TransportationDetails->ConveyanceInformation->VoyageTripNumber;
-			    $CarrierSCAC = $datos[1]->MessageProperties->TransportationDetails->ConveyanceInformation->CarrierSCAC;
-			    $TransportIdentification = $datos[1]->MessageProperties->TransportationDetails->ConveyanceInformation->TransportIdentification;
-		    
-
-			    /***** Bloque de TransportationDetails->Location  ****/
-				    $LocationCode = $datos[1]->MessageProperties->TransportationDetails->Location->LocationCode;
-					$LocationName = $datos[1]->MessageProperties->TransportationDetails->Location->LocationName;
-					$LocationCountry = $datos[1]->MessageProperties->TransportationDetails->Location->LocationCountry;
-					$DateTime = $datos[1]->MessageProperties->TransportationDetails->Location->DateTime;
-
-					$LocationCode1 = $datos[1]->MessageProperties->TransportationDetails->Location[1]->LocationCode;
-					$LocationName1 = $datos[1]->MessageProperties->TransportationDetails->Location[1]->LocationName;
-					$LocationCountry1 = $datos[1]->MessageProperties->TransportationDetails->Location[1]->LocationCountry;
-					$DateTime1 = $datos[1]->MessageProperties->TransportationDetails->Location[1]->DateTime;
-
-					$LocationCode2 = $datos[1]->MessageProperties->TransportationDetails->Location[2]->LocationCode;
-					$LocationName2 = $datos[1]->MessageProperties->TransportationDetails->Location[2]->LocationName;
-					$LocationCountry2 = $datos[1]->MessageProperties->TransportationDetails->Location[2]->LocationCountry;
-					$DateTime2 = $datos[1]->MessageProperties->TransportationDetails->Location[2]->DateTime;
-
-					$LocationCode3 = $datos[1]->MessageProperties->TransportationDetails->Location[3]->LocationCode;
-					$LocationName3 = $datos[1]->MessageProperties->TransportationDetails->Location[3]->LocationName;
-					$LocationCountry3 = $datos[1]->MessageProperties->TransportationDetails->Location[3]->LocationCountry;
-					$DateTime3 = $datos[1]->MessageProperties->TransportationDetails->Location[3]->DateTime;
-
-					$LocationCode4 = $datos[1]->MessageProperties->TransportationDetails->Location[4]->LocationCode;
-					$LocationName4 = $datos[1]->MessageProperties->TransportationDetails->Location[4]->LocationName;
-					$LocationCountry4 = $datos[1]->MessageProperties->TransportationDetails->Location[4]->LocationCountry;
-					$DateTime4 = $datos[1]->MessageProperties->TransportationDetails->Location[4]->DateTime;
-
-				/**** Fin del Bloque TransportationDetails->Location ****/
-
-				$PartnerIdentifier = $datos[1]->MessageProperties->Parties->PartnerInformation->PartnerIdentifier;
-				$LineNumber = $datos[1]->MessageDetails->EquipmentDetails->LineNumber;
-				$EquipmentIdentifier = $datos[1]->MessageDetails->EquipmentDetails->EquipmentIdentifier;
-				$EquipmentTypeCode = $datos[1]->MessageDetails->EquipmentDetails->EquipmentType->EquipmentTypeCode;
-			/**** fin del MessageBody ****/
-			     
-
-			}
-		   
-		   /**** Consulto para ver si ya el container fue guardado antes de repetirlo ****/
-		$consult = "SELECT e.DocumentIdentifier,c.Identifier FROM evento as e , container as c where e.DocumentIdentifier = '$DocumentIdentifier'";
-		$consulta = $conn->query($consult);
+							    }
+						}
 
 
-			if ($consulta->num_rows == 0) {
+						foreach ($readXml->Header->Parties as $datosPartner) {
+							echo "PartnerIdentifier1 => ".$PartnerIdentifier1 = $datosPartner->PartnerInformation[0]->PartnerIdentifier;
+							echo "PartnerIdentifier2 => ".$PartnerIdentifier2 = $datosPartner->PartnerInformation[1]->PartnerIdentifier;
+						}
+							
+						foreach ($readXml->MessageBody as $datosMessageBody) {
 
-				/**** Datos a insertar en la tabla event ****/
-				$insertEvent = "INSERT INTO `evento`(`EventCode`, `locationCode`, `locationName`, `locationCounty`, `dateTime`, `booking`, `idBL`, `instructions`,`DocumentIdentifier`) VALUES('$EventCode','$LocationCode','$LocationName','$LocationCountry','$DateTime', '$ReferenceInformation1','$ReferenceInformation2','$ShipmentComments','$DocumentIdentifier')";
-				$result = $conn->query($insertEvent);
+							echo "PartnerIdentifier => ".$PartnerIdentifier = $datosMessageBody->MessageProperties->Parties->PartnerInformation->PartnerIdentifier;
+							echo "LineNumber => ".$LineNumber = $datosMessageBody->MessageDetails->EquipmentDetails->LineNumber;
+							echo "EquipmentIdentifier => ".$EquipmentIdentifier = $datosMessageBody->MessageDetails->EquipmentDetails->EquipmentIdentifier;
+							echo "EquipmentTypeCode => ".$EquipmentTypeCode = $datosMessageBody->MessageDetails->EquipmentDetails->EquipmentType->EquipmentTypeCode;
+							echo "LocationCode => ".$LocationCode = $datosMessageBody->MessageProperties->EventLocation->Location->LocationCode;
+							echo "LocationCountry => ".$LocationCountry = $datosMessageBody->MessageProperties->EventLocation->Location->LocationCountry;
+							echo "DateTime => ".$DateTime = $datosMessageBody->MessageProperties->EventLocation->Location->DateTime;
+							echo "ConveyanceName => ".$ConveyanceName = $datosMessageBody->MessageProperties->TransportationDetails->ConveyanceInformation->ConveyanceName;
+							echo "VoyageTripNumber => ".$VoyageTripNumber = $datosMessageBody->MessageProperties->TransportationDetails->ConveyanceInformation->VoyageTripNumber;
+							echo "CarrierSCAC => ".$CarrierSCAC = $datosMessageBody->MessageProperties->TransportationDetails->ConveyanceInformation->CarrierSCAC;
+							echo "TransportIdentification => ".$TransportIdentification = $datosMessageBody->MessageProperties->TransportationDetails->ConveyanceInformation->TransportIdentification;	
+						}
 
+						/**** Consulto para ver si ya el container fue guardado antes de repetirlo ****/
+						if ($DocumentIdentifier) {
 
-				/**** datos a insertar en la tabla container ****/
-				$insertContainer = "INSERT INTO `container`(`idBL`, `typeMessage`, `Identifier`, `datetime`, `entidadEmisora`, `entidadReceptora`, `contactName`, `telephone`, `ConveyanceName`, `VoyageTripNumber`, `CarrierSCAC`, `TransportIdentification`, `CodeCityPort`, `nameCityPort`, `codeCountryPort`, `salidaEfectivaPort`, `codeCityReceipt`, `nameCityReceipt`, `codeCountyReceipt`, `salidaEstimadaReceipt`, `codeCityLoading`, `nameCityLoading`, `codeCountryLoading`, `salidaEfectivaLoading`, `codeCityDischarge`, `nameCityDischarge`, `codeCountyDischarge`, `llegadaEfectivaDischarge`, `codeCityDelivery`, `nameCityDelivery`, `codeCountyDelivery`, `llegadaEstimadaDelivery`, `partnerIdentifier`, `partnerName`, `equipmentIdentifier`, `equipmentTypeCode`) VALUES ('$ReferenceInformation2','$MessageType','$DocumentIdentifier','$DateTime','$PartnerIdentifier1','$PartnerIdentifier2','value-8','value-9','$ConveyanceName','$VoyageTripNumber','$CarrierSCAC','$TransportIdentification','$LocationCode','$LocationName','$LocationCountry','$DateTime','$LocationCode1','$LocationName1','$LocationCountry1','$DateTime1','$LocationCode2','$LocationName2','$LocationCountry2','$DateTime2','$LocationCode3','$LocationName3','$LocationCountry3','$DateTime3','$LocationCode4','$LocationName4','$LocationCountry4','$DateTime4','$PartnerIdentifier','$LineNumber','$EquipmentIdentifier','$EquipmentTypeCode')";
-				$result = $conn->query($insertContainer);
+							$consult = "SELECT e.DocumentIdentifier,c.Identifier FROM evento as e , container as c where e.DocumentIdentifier = c.Identifier and e.DocumentIdentifier = '$DocumentIdentifier'";
+						 	$consulta = $conn->query($consult);
+						 	if ($consulta->num_rows == 0) {
 
-			}
-
-
-
-			echo "<!DOCTYPE html>
-						<html>
-						<head>
-						<title>INFORMACION XML</title>
-						</head>
-							<body>
-								<table border='1'>
-								    <th colspan= 4>Event Number Identifier: ".$DocumentIdentifier."</th>
-								    <tr>
-									<th>EventCode</th>
-							    	<th>LocationCode</th> 
-							    	<th>LocationName</th>
-							    	<th>LocationCountry</th>
-							    	</tr>
-							    	<tr>
-							    		<td>".$EventCode."</td>
-							    		<td>".$LocationCode."</td> 
-							    		<td>".$LocationName."</td> 
-							    		<td>".$LocationCountry."</td>
-							    	</tr>
-							    	<th>DateTime</th>
-							    	<th>booking</th>
-							    	<th>IdBl</th>
-							    	<th>Instructions</th>
-							    	<tr>
-							    		<td>".$DateTime."</td>
-							    		<td>".$ReferenceInformation1."</td>
-							    		<td>" .$ReferenceInformation2."</td>
-							    		<td>".$ShipmentComments."</td>
-							    	</tr>
-								</table>
-								</br>
-								<table border='1'>
-									<tr><th colspan=4>Table Container</th></tr>
-									<th>IdBl</th>
-									<th>MessageType</th>
-							    	<th>DocumentIdentifier</th> 
-							    	<th>DateTime</th>
-									<tr>
-										<td>".$EventCode."</td>
-										<td>".$MessageType."</td>
-							    		<td>".$DocumentIdentifier."</td> 
-							    		<td>".$DateTime."</td>
-							    	</tr>
-							    	<th>Entidadd Emisora</th>
-							    	<th>Entidad Receptora</th>
-							    	<th>ContactName</th>
-							    	<th>telephone</th>
-							    	<tr>
-							    		<td>".$PartnerIdentifier1."</td>
-							    		<td>".$PartnerIdentifier2."</td>
-							    		<td>no tengo nombre de contacto</td>
-							    		<td>No tengo en telephone</td>
-							    	</tr>
-							    	<th>ConveyanceName</th>
-							    	<th>VoyageTripNumber</th>
-							    	<th>CarrierSCAC</th>
-							    	<th>TransportIdentification</th>
-							    	<tr>
-							    		<td>".$ConveyanceName."</td>
-							    		<td>".$VoyageTripNumber."</td>
-							    		<td>".$CarrierSCAC."</td>
-							    		<td>".$TransportIdentification."</td>
-							    	</tr>
-							    	<th>CodePort</th>
-							    	<th>NamePort</th>
-							    	<th>CountryPort</th>
-							    	<th>DateTimePort</th>
-							    	<tr>
-							    		<td>".$LocationCode."</td>
-							    		<td>".$LocationName."</td>
-							    		<td>".$LocationCountry."</td>
-							    		<td>".$DateTime."</td>
-							    	</tr>
-							    	<th>CodeReceipt</th>
-							    	<th>NameReceipt</th>
-							    	<th>CountryReceipt</th>
-							    	<th>DateTimeReceipt</th>
-							    	<tr>
-							    		<td>".$LocationCode1."</td>
-							    		<td>".$LocationName1."</td>
-							    		<td>".$LocationCountry1."</td>
-							    		<td>".$DateTime1."</td>
-							    	</tr>
-							    	<th>CodeLoading</th>
-							    	<th>NameLoading</th>
-							    	<th>CountryLoading</th>
-							    	<th>DateTimeLoading</th>
-							    	<tr>
-							    		<td>".$LocationCode2."</td>
-							    		<td>".$LocationName2."</td>
-							    		<td>".$LocationCountry2."</td>
-							    		<td>".$DateTime2."</td>
-							    	</tr>
-							    	<th>CodeDischarge</th>
-							    	<th>NameDischarge</th>
-							    	<th>CountryDischarge</th>
-							    	<th>DateTimeDischarge</th>
-							    	<tr>
-							    		<td>".$LocationCode3."</td>
-							    		<td>".$LocationName3."</td>
-							    		<td>".$LocationCountry3."</td>
-							    		<td>".$DateTime3."</td>
-							    	</tr>
-							    	<th>CodeDelivery</th>
-							    	<th>NameDelivery</th>
-							    	<th>CountryDelivery</th>
-							    	<th>DateTimeDelivery</th>
-							    	<tr>
-							    		<td>".$LocationCode4."</td>
-							    		<td>".$LocationName4."</td>
-							    		<td>".$LocationCountry4."</td>
-							    		<td>".$DateTime4."</td>
-							    	</tr>
-							    	<th>Codigo Armador</th>
-							    	<th>Nombre Armador</th>
-							    	<th>Estado del Contenedor y la Serie</th>
-							    	<th>Tipo de Contenedor </th>
-							    	<tr>
-							    		<td>".$PartnerIdentifier."</td>
-							    		<td>".$LineNumber."</td>
-							    		<td>".$EquipmentIdentifier."</td>
-							    		<td>".$EquipmentTypeCode."</td>
-							    	</tr>
-								</table>
-								</br>
-								<h4>".$resultado."</h4>
-							</body>
-						</html>";
-			
-		}
-
-	echo "</table>";
-
-		
-	}
+								/**** Datos a insertar en la tabla event ****/
+								$insertEvent = "INSERT INTO `evento`(`EventCode`, `locationCode`, `locationName`, `locationCounty`, `dateTime`, `booking`, `idBL`, `instructions`,`DocumentIdentifier`) VALUES('$EventCode','$LocationCode','$LocationName','$LocationCountry','$DateTime', '$ReferenceInformation1','$ReferenceInformation2','$ShipmentComments','$DocumentIdentifier')";
+								$result = $conn->query($insertEvent);
 
 
-// /* cerrar la conexión */
- $conn->close();
+								/**** datos a insertar en la tabla container ****/
+								$insertContainer = "INSERT INTO `container`(`idBL`, `typeMessage`, `Identifier`, `datetime`, `entidadEmisora`, `entidadReceptora`, `contactName`, `telephone`, `ConveyanceName`, `VoyageTripNumber`, `CarrierSCAC`, `TransportIdentification`, `CodeCityPort`, `nameCityPort`, `codeCountryPort`, `salidaEfectivaPort`, `codeCityReceipt`, `nameCityReceipt`, `codeCountyReceipt`, `salidaEstimadaReceipt`, `codeCityLoading`, `nameCityLoading`, `codeCountryLoading`, `salidaEfectivaLoading`, `codeCityDischarge`, `nameCityDischarge`, `codeCountyDischarge`, `llegadaEfectivaDischarge`, `codeCityDelivery`, `nameCityDelivery`, `codeCountyDelivery`, `llegadaEstimadaDelivery`, `partnerIdentifier`, `partnerName`, `equipmentIdentifier`, `equipmentTypeCode`) VALUES ('$ReferenceInformation2','$MessageType','$DocumentIdentifier','$DateTime','$PartnerIdentifier1','$PartnerIdentifier2','value-8','value-9','$ConveyanceName','$VoyageTripNumber','$CarrierSCAC','$TransportIdentification','$LocationCode','$LocationName','$LocationCountry','$DateTime','$LocationCode1','$LocationName1','$LocationCountry1','$DateTime1','$LocationCode2','$LocationName2','$LocationCountry2','$DateTime2','$LocationCode3','$LocationName3','$LocationCountry3','$DateTime3','$LocationCode4','$LocationName4','$LocationCountry4','$DateTime4','$PartnerIdentifier','$LineNumber','$EquipmentIdentifier','$EquipmentTypeCode')";
+								$result = $conn->query($insertContainer);
+
+							}
+							
+						}
+						
+
+					}
+					// /* cerrar la conexión */
+					$conn->close(); 	 
+				}
+            }
+            closedir($dir);
+        }
+    }
+}
 
 
 ?>
